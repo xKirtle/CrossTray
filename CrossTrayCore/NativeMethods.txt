@@ -20,4 +20,5 @@ GetMessage
 TranslateMessage
 DispatchMessage
 PostThreadMessage
-GetCurrentThreadId
+GetThreadId
+OpenThread
