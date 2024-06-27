@@ -29,22 +29,23 @@ public static class Program
         // Define actions for context menu items
         notifyIcon.AddContextMenuItem("Item 1", () => Console.WriteLine("Item 1 clicked"));
         notifyIcon.AddContextMenuItem("Item 2", () => Console.WriteLine("Item 2 clicked"));
+        notifyIcon.AddContextMenuSeparator();
         notifyIcon.AddContextMenuItem("Exit", () => Environment.Exit(0));
 
         // Add the icon to the system tray
-        if (notifyIcon.AddIcon())
-        {
-            Console.WriteLine("Icon added to the system tray.");
-        }
-        else
-        {
-            Console.WriteLine("Failed to add icon to the system tray.");
-        }
+        Console.WriteLine(notifyIcon.MountIcon()
+            ? "Icon added to the system tray."
+            : "Failed to add icon to the system tray.");
 
         // Show a balloon tip
         notifyIcon.ShowBalloonTip("Hello", "This is a balloon tip!", NOTIFY_ICON_INFOTIP_FLAGS.NIIF_INFO);
 
         // Keep the application running to see the tray icon
+        Console.WriteLine("Press Enter to unmount icon...");
+        Console.ReadLine();
+
+        notifyIcon.UnmountIcon();
+        
         Console.WriteLine("Press Enter to exit...");
         Console.ReadLine();
     }
