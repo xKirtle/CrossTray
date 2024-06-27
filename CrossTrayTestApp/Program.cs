@@ -5,7 +5,7 @@ using CrossTrayCore;
 
 namespace CrossTrayTestApp;
 
-[SupportedOSPlatform("windows5.1.2600")]
+[SupportedOSPlatform("windows6.0.6000")]
 public static class Program
 {
     public static void Main()
@@ -27,22 +27,9 @@ public static class Program
         notifyIcon.OnRightClickAction = () => Console.WriteLine("Tray icon right-clicked");
 
         // Define actions for context menu items
-        notifyIcon.OnContextMenuItemClickAction = commandId =>
-        {
-            switch (commandId)
-            {
-                case 1:
-                    Console.WriteLine("Item 1 clicked");
-                    break;
-                case 2:
-                    Console.WriteLine("Item 2 clicked");
-                    break;
-                case 3:
-                    Console.WriteLine("Exit clicked");
-                    Environment.Exit(0);
-                    break;
-            }
-        };
+        notifyIcon.AddContextMenuItem("Item 1", () => Console.WriteLine("Item 1 clicked"));
+        notifyIcon.AddContextMenuItem("Item 2", () => Console.WriteLine("Item 2 clicked"));
+        notifyIcon.AddContextMenuItem("Exit", () => Environment.Exit(0));
 
         // Add the icon to the system tray
         if (notifyIcon.AddIcon())

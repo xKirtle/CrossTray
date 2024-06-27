@@ -3,6 +3,7 @@
 namespace CrossTrayCore;
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -14,22 +15,24 @@ using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
-[SupportedOSPlatform("windows5.1.2600")]
+[SupportedOSPlatform("windows6.0.6000")]
 public class NotifyIconWrapper : IDisposable
 {
     private HWND _hwnd;
     private HICON _iconHandle;
     private readonly uint _uId = 1;
     private string _tooltip;
-    private readonly uint _wmTrayicon = RegisterWindowMessage("WM_TRAYICON");
-    private readonly Thread _thread;
-    private readonly ManualResetEvent _windowCreatedEvent;
+    private readonly uint WM_TRAYICON = RegisterWindowMessage("WM_TRAYICON");
+    private Thread _thread;
+    private ManualResetEvent _windowCreatedEvent;
     private bool _disposed = false;
+    private readonly Dictionary<int, Action> _contextMenuActions = new();
+    private int _nextMenuItemId = 1;
+    private readonly List<PinnedString> _pinnedStrings = new();
 
     public Action OnLeftClickAction { get; set; }
     public Action OnDoubleClickAction { get; set; }
     public Action OnRightClickAction { get; set; }
-    public Action<int> OnContextMenuItemClickAction { get; set; }
 
     public NotifyIconWrapper(string tooltip)
     {
@@ -51,7 +54,8 @@ public class NotifyIconWrapper : IDisposable
         _hwnd = CreateMinimalWindow();
         _windowCreatedEvent.Set();
 
-        while (GetMessage(out var msg, HWND.Null, 0, 0))
+        MSG msg;
+        while (GetMessage(out msg, HWND.Null, 0, 0))
         {
             TranslateMessage(msg);
             DispatchMessage(msg);
@@ -100,7 +104,7 @@ public class NotifyIconWrapper : IDisposable
             hWnd = _hwnd,
             uID = _uId,
             uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE | NOTIFY_ICON_DATA_FLAGS.NIF_ICON | NOTIFY_ICON_DATA_FLAGS.NIF_TIP,
-            uCallbackMessage = _wmTrayicon,
+            uCallbackMessage = WM_TRAYICON,
             hIcon = _iconHandle,
             szTip = _tooltip
         };
@@ -146,6 +150,15 @@ public class NotifyIconWrapper : IDisposable
         };
 
         return Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, in nid);
+    }
+
+    public void AddContextMenuItem(string text, Action action)
+    {
+        var menuItemId = _nextMenuItemId++;
+        _contextMenuActions[menuItemId] = action;
+        _pinnedStrings.Add(new PinnedString(text));
+
+        // No need to do anything else here; items will be appended in ShowContextMenu
     }
 
     private static unsafe HICON LoadIconFromFile(string filePath)
@@ -203,9 +216,7 @@ public class NotifyIconWrapper : IDisposable
 
     private LRESULT WindowProc(HWND hwnd, uint uMsg, WPARAM wParam, LPARAM lParam)
     {
-        Console.WriteLine($"WindowProc: {uMsg}. WM_TRAYICON: {_wmTrayicon}. WM_COMMAND: {WM_COMMAND}");
-
-        if (uMsg == _wmTrayicon)
+        if (uMsg == WM_TRAYICON)
         {
             switch ((uint)lParam.Value)
             {
@@ -223,23 +234,22 @@ public class NotifyIconWrapper : IDisposable
         }
         else if (uMsg == WM_COMMAND)
         {
-            int commandId = (int)wParam.Value;
-            OnContextMenuItemClickAction?.Invoke(commandId);
+            var commandId = (int)wParam.Value;
+            _contextMenuActions[commandId].Invoke();
         }
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
-    private static unsafe void ShowContextMenu(HWND hwnd)
+    private unsafe void ShowContextMenu(HWND hwnd)
     {
         var hMenu = CreatePopupMenu();
 
-        using var item1 = new PinnedString("Item 1");
-        using var item2 = new PinnedString("Item 2");
-        using var exitItem = new PinnedString("Exit");
-        AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_STRING, (UIntPtr)1, item1.Ptr);
-        AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_STRING, (UIntPtr)2, item2.Ptr);
-        AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_SEPARATOR, UIntPtr.Zero, (PCWSTR)null);
-        AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_STRING, (UIntPtr)3, exitItem.Ptr);
+        int index = 0;
+        foreach (var menuItemId in _contextMenuActions.Select(kvp => kvp.Key))
+        {
+            var pinnedString = _pinnedStrings[index++];
+            AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_STRING, (UIntPtr)menuItemId, pinnedString.Ptr);
+        }
 
         GetCursorPos(out var pt);
         SetForegroundWindow(hwnd);
@@ -247,6 +257,7 @@ public class NotifyIconWrapper : IDisposable
         PostMessage(hwnd, 0, 0, 0); // WM_NULL is 0
     }
 
+    
     public void Dispose()
     {
         Dispose(true);
@@ -262,7 +273,7 @@ public class NotifyIconWrapper : IDisposable
             RemoveIcon();
             var threadHandle = OpenThread(THREAD_ACCESS_RIGHTS.THREAD_ALL_ACCESS, false, (uint)_thread.ManagedThreadId);
             PostThreadMessage(GetThreadId(threadHandle), WM_QUIT, 0, 0);
-            CloseHandle(threadHandle);
+            CloseHandle(threadHandle); // Close the handle to avoid handle leaks
         }
 
         _disposed = true;
