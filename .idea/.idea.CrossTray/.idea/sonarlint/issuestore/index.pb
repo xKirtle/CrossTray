@@ -13,3 +13,7 @@ X
 (CrossTrayTestApp/CrossTrayTestApp.csproj,5\2\524d41d5e5af77392853fa19e2c7b5fb4dc233f6
 P
  CrossTrayCore/NativeMethods.json,b\5\b5a4729af4da7edd90615f02fc55e4fa0a7d91e0
+M
+CrossTrayCore/PinnedString.cs,9\1\914a1ee42ee61c95376d441758649f04d4a6fcf1
+R
+"CrossTrayTestApp/NativeMethods.txt,b\a\ba05f03da054504ffe3c1fcc2fe4f4414c2905c8
