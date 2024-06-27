@@ -1,0 +1,7 @@
+Shell_NotifyIcon
+ExtractIcon
+CreateWindowEx
+RegisterClass
+DefWindowProc
+CreateIconFromResourceEx
+RegisterWindowMessage

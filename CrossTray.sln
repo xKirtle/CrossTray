@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossTrayCore", "CrossTrayCore\CrossTrayCore.csproj", "{4D10FFC5-BFFD-4CC5-A188-0BEE4C9AF9A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossTrayTestApp", "CrossTrayTestApp\CrossTrayTestApp.csproj", "{E82BD1D2-B5E8-453D-B9B4-B6FDB43C8C09}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4D10FFC5-BFFD-4CC5-A188-0BEE4C9AF9A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D10FFC5-BFFD-4CC5-A188-0BEE4C9AF9A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D10FFC5-BFFD-4CC5-A188-0BEE4C9AF9A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D10FFC5-BFFD-4CC5-A188-0BEE4C9AF9A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E82BD1D2-B5E8-453D-B9B4-B6FDB43C8C09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E82BD1D2-B5E8-453D-B9B4-B6FDB43C8C09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E82BD1D2-B5E8-453D-B9B4-B6FDB43C8C09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E82BD1D2-B5E8-453D-B9B4-B6FDB43C8C09}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
