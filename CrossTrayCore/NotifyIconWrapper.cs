@@ -15,26 +15,26 @@ namespace CrossTrayCore;
 public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
 {
     private HWND _hwnd;
-    private HICON _hicon;
+    private HICON _hIcon;
     private string _tooltip;
-    private const uint UId = 1; // What is this
+    private const uint UId = 1;
     private readonly uint _wmTrayIcon = RegisterWindowMessage("WM_TRAYICON");
 
     private readonly Thread _thread;
     private readonly ManualResetEvent _windowCreatedEvent;
     private bool _disposed;
     
-    private Dictionary<int, ContextMenuItem> _contextMenuItems = new();
+    private readonly Dictionary<int, ContextMenuItem> _contextMenuItems = new();
     private int _nextMenuItemId = 1;
     
-    public Action OnLeftClickAction { get; set; }
-    public Action OnDoubleClickAction { get; set; }
-    public Action OnRightClickAction { get; set; }
+    public Action? OnLeftClickAction { get; set; }
+    public Action? OnDoubleClickAction { get; set; }
+    public Action? OnRightClickAction { get; set; }
 
     public NotifyIconWrapper(string tooltip)
     {
         _tooltip = tooltip;
-        _hicon = new HICON(SystemIcons.Application.Handle);
+        _hIcon = new HICON(SystemIcons.Application.Handle);
         _windowCreatedEvent = new ManualResetEvent(initialState: false);
         
         // Start the thread that will handle the NotifyIcon message loop
@@ -47,13 +47,13 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     
     public void SetIconFromFile(string iconFilePath)
     {
-        _hicon = LoadIconFromFile(iconFilePath);
+        _hIcon = LoadIconFromFile(iconFilePath);
         RefreshIcon();
     }
 
     public void SetIconFromEmbeddedResource(string resourceName, Assembly resourceAssembly)
     {
-        _hicon = LoadIconFromEmbeddedResource(resourceName, resourceAssembly);
+        _hIcon = LoadIconFromEmbeddedResource(resourceName, resourceAssembly);
         RefreshIcon();
     }
 
@@ -83,41 +83,40 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return InternalShellNotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, NOTIFY_ICON_DATA_FLAGS.NIF_ICON);
     }
 
-    public void AddContextMenuItem(string itemText, Action action)
+    public static ContextMenuItem CreateMenuItem(string itemText, Action action)
     {
-        var menuItem = new ContextMenuItem(itemText, action, MENU_ITEM_FLAGS.MF_STRING);
-        _contextMenuItems.Add(_nextMenuItemId++, menuItem);
+        return new ContextMenuItem(itemText, action);
     }
 
-    public void AddContextMenuSeparator()
+    public static ContextMenuItem CreateSeparator()
     {
-        var separator = new ContextMenuItem("", () => { }, MENU_ITEM_FLAGS.MF_SEPARATOR);
-        _contextMenuItems.Add(_nextMenuItemId++, separator);
+        return new ContextMenuItem("", () => { }, MENU_ITEM_FLAGS.MF_SEPARATOR);
     }
 
-    public void AddContextMenuSubmenu(string itemText, ICollection<(string subItemText, Action subItemAction)> submenuItems)
+    public static ContextMenuItem CreateSubmenuItem(string itemText, List<ContextMenuItem> submenuItems)
     {
-        // TODO: Submenu must implement its own context menu with its own IDs... Think of a recursive solution
-        throw new NotImplementedException();
+        var submenuItem = new ContextMenuItem(itemText, () => { }, MENU_ITEM_FLAGS.MF_POPUP, submenuItems);
+        foreach (var item in submenuItems)
+        {
+            item.Parent = submenuItem;
+        }
+        return submenuItem;
     }
-    
+
+    public void CreateContextMenu(List<ContextMenuItem> contextMenuItems)
+    {
+        _contextMenuItems.Clear();
+        _nextMenuItemId = 1;
+        foreach (var item in contextMenuItems)
+        {
+            AddMenuItemRecursive(item, null);
+        }
+    }
+
     public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        UnmountIcon();
-        
-        // Send a WM_QUIT message to the message loop to exit
-        var threadHandle = OpenThread(THREAD_ACCESS_RIGHTS.THREAD_ALL_ACCESS, false, (uint)_thread.ManagedThreadId);
-        PostThreadMessage(GetThreadId(threadHandle), WM_QUIT, 0, 0);
-        CloseHandle(threadHandle);
-        
+        Dispose(true);
         GC.SuppressFinalize(this);
-        
-        _disposed = true;
     }
     
     // internal/private methods
@@ -204,10 +203,9 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     /// <param name="uMsg">Message identifier. Specifies what kind of message is being received (e.g., a mouse click, a command, etc...).</param>
     /// <param name="wParam">Often used to pass specific data related to the message. In the case of WM_COMMAND, it holds the identifier of the menu item that was selected.</param>
     /// <param name="lParam">Additional message information, for instance, in the case of mouse messages, holds information about the mouse event (like which button was clicked).</param>
-    /// <returns></returns>
+    /// <returns><see cref="LRESULT"/></returns>
     private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARAM lParam)
     {
-        // Check if the message is related to our tray icon
         if (uMsg == _wmTrayIcon)
         {
             switch ((uint)lParam.Value)
@@ -217,44 +215,29 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
                     break;
                 case WM_RBUTTONDOWN:
                     OnRightClickAction?.Invoke();
-                        CreateContextMenu(hwnd);
+                    ShowContextMenu(hwnd);
                     break;
                 case WM_LBUTTONDBLCLK:
                     OnDoubleClickAction?.Invoke();
                     break;
             }
         }
-        // Otherwise, check if the message is a command from the context menu
         else if (uMsg == WM_COMMAND)
         {
             var commandId = (int)wParam.Value;
-            _contextMenuItems[commandId].Action.Invoke();
+            if (_contextMenuItems.TryGetValue(commandId, out var menuItem) && menuItem.Action != null)
+            {
+                menuItem.Action.Invoke();
+            }
         }
         
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
     
-    private unsafe void CreateContextMenu(HWND hwnd)
+    private unsafe void ShowContextMenu(HWND hwnd)
     {
         var hMenu = CreatePopupMenu();
-
-        foreach (var (menuItemId, contextMenuItem) in _contextMenuItems)
-        {
-            AppendMenu(hMenu, contextMenuItem.Flags, (nuint)menuItemId, contextMenuItem.Text.Ptr);
-
-            // TODO: Add submenu support
-            // if (contextMenuItem.SubItems.Count <= 0)
-            // {
-            //     continue;
-            // }
-            
-            // var submenu = CreatePopupMenu();
-            // foreach (var (subMenuItemId, subMenuItem) in contextMenuItem.SubItems.Select((item, i) => (i + 1, item)))
-            // {
-            //     AppendMenu(submenu, subMenuItem.Flags, (nuint)subMenuItemId, subMenuItem.Text.Ptr);
-            // }
-            // AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_POPUP, (nuint)submenu, contextMenuItem.Text.Ptr);
-        }
+        AddMenuItemsToMenu(hMenu, _contextMenuItems.Values.Where(item => item.Parent == null).ToList());
 
         GetCursorPos(out var point);
         SetForegroundWindow(hwnd);
@@ -262,10 +245,42 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         // Align popup to the left of the cursor and show it on right-click
         TrackPopupMenu(hMenu, TRACK_POPUP_MENU_FLAGS.TPM_LEFTALIGN | TRACK_POPUP_MENU_FLAGS.TPM_RIGHTBUTTON, point.X, point.Y, 0, _hwnd);
         
-        // Post a no-op message to the window to ensure the message loop processes any new messages
         PostMessage(hwnd, 0, 0, 0);
     }
-    
+
+    private static void AddMenuItemsToMenu(HMENU hMenu, List<ContextMenuItem> menuItems)
+    {
+        foreach (var contextMenuItem in menuItems)
+        {
+            if (contextMenuItem.SubItems.Count > 0)
+            {
+                var hSubMenu = CreatePopupMenu();
+                AddMenuItemsToMenu(hSubMenu, contextMenuItem.SubItems);
+                AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_POPUP, (nuint)hSubMenu.Value, contextMenuItem.Text.Ptr);
+            }
+            else
+            {
+                AppendMenu(hMenu, contextMenuItem.Flags, (nuint)contextMenuItem.Id, contextMenuItem.Text.Ptr);
+            }
+        }
+    }
+
+    private void AddMenuItemRecursive(ContextMenuItem menuItem, ContextMenuItem? parent)
+    {
+        menuItem.Id = _nextMenuItemId++;
+        _contextMenuItems[menuItem.Id] = menuItem;
+
+        if (parent != null)
+        {
+            menuItem.Parent = parent;
+        }
+        
+        foreach (var subItem in menuItem.SubItems)
+        {
+            AddMenuItemRecursive(subItem, menuItem);
+        }
+    }
+
     private bool InternalShellNotifyIcon(NOTIFY_ICON_MESSAGE nim, NOTIFY_ICON_DATA_FLAGS flags, string? info = null, string? infoTitle = null, NOTIFY_ICON_INFOTIP_FLAGS infoFlags = 0)
     {
         var nid = new NOTIFYICONDATAW
@@ -278,10 +293,27 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
             szInfoTitle = infoTitle,
             dwInfoFlags = infoFlags,
             uCallbackMessage = _wmTrayIcon,
-            hIcon = _hicon,
+            hIcon = _hIcon,
             szTip = _tooltip
         };
 
         return Shell_NotifyIcon(nim, in nid);
+    }
+    
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        
+        UnmountIcon();
+        
+        // Send a WM_QUIT message to the message loop to exit
+        var threadHandle = OpenThread(THREAD_ACCESS_RIGHTS.THREAD_ALL_ACCESS, false, (uint)_thread.ManagedThreadId);
+        PostThreadMessage(GetThreadId(threadHandle), WM_QUIT, 0, 0);
+        CloseHandle(threadHandle);
+        
+        _disposed = true;
     }
 }

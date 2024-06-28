@@ -12,7 +12,5 @@ public interface INotifyIconWrapper
     bool MountIcon();
     bool UnmountIcon();
     bool RefreshIcon();
-    void AddContextMenuItem(string itemText, Action action);
-    void AddContextMenuSeparator();
-    void AddContextMenuSubmenu(string itemText, ICollection<(string subItemText, Action subItemAction)> submenuItems);
+    void CreateContextMenu(List<ContextMenuItem> contextMenuItems);
 }

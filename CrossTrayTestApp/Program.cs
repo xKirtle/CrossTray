@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.Versioning;
 using Windows.Win32.UI.Shell;
+using Windows.Win32.UI.WindowsAndMessaging;
 using CrossTrayCore;
 
 namespace CrossTrayTestApp;
@@ -27,10 +28,31 @@ public static class Program
         notifyIcon.OnRightClickAction = () => Console.WriteLine("Tray icon right-clicked");
 
         // Define actions for context menu items
-        notifyIcon.AddContextMenuItem("Item 1", () => Console.WriteLine("Item 1 clicked"));
-        notifyIcon.AddContextMenuItem("Item 2", () => Console.WriteLine("Item 2 clicked"));
-        notifyIcon.AddContextMenuSeparator();
-        notifyIcon.AddContextMenuItem("Exit", () => Environment.Exit(0));
+        notifyIcon.CreateContextMenu(
+        [
+            NotifyIconWrapper.CreateMenuItem("Item 1", () => Console.WriteLine("Item 1 clicked")),
+            NotifyIconWrapper.CreateSubmenuItem("Popup 1",
+            [
+                NotifyIconWrapper.CreateMenuItem("Subitem 1.1", () => Console.WriteLine("Subitem 1.1 clicked")),
+                NotifyIconWrapper.CreateMenuItem("Subitem 1.2", () => Console.WriteLine("Subitem 1.2 clicked")),
+                NotifyIconWrapper.CreateSubmenuItem("Popup 2",
+                [
+                    NotifyIconWrapper.CreateMenuItem("Subitem 2.1", () => Console.WriteLine("Subitem 2.1 clicked")),
+                    NotifyIconWrapper.CreateMenuItem("Subitem 2.2", () => Console.WriteLine("Subitem 2.2 clicked")),
+                    NotifyIconWrapper.CreateSeparator(),
+                    NotifyIconWrapper.CreateMenuItem("Subitem 2.3", () => Console.WriteLine("Subitem 2.3 clicked")),
+                    
+                    NotifyIconWrapper.CreateSubmenuItem("Popup 3",
+                    [
+                        NotifyIconWrapper.CreateMenuItem("Subitem 3.1", () => Console.WriteLine("Subitem 3.1 clicked")),
+                        NotifyIconWrapper.CreateMenuItem("Subitem 3.2", () => Console.WriteLine("Subitem 3.2 clicked"))
+                    ])
+                ])
+            ]),
+
+            NotifyIconWrapper.CreateSeparator(),
+            NotifyIconWrapper.CreateMenuItem("Exit", () => Environment.Exit(0))
+        ]);
 
         // Add the icon to the system tray
         Console.WriteLine(notifyIcon.MountIcon()

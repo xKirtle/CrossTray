@@ -17,7 +17,5 @@ M
 CrossTrayCore/PinnedString.cs,9\1\914a1ee42ee61c95376d441758649f04d4a6fcf1
 S
 #CrossTrayCore/INotifyIconWrapper.cs,8\7\87c8caa87621e4bd4edbd083a8dedc4b05a94654
-U
-%CrossTrayCore/NotifyIconWrapperOld.cs,3\e\3e0e3194d11ae2742643713e8b67238cd6e4ffcf
 P
  CrossTrayCore/ContextMenuItem.cs,2\e\2e18ff1f5d227e031640bfd6de224ffdb5f5926b
