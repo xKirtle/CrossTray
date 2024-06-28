@@ -2,7 +2,7 @@
 
 namespace CrossTrayCore.ContextMenuItems;
 
-public class CheckableMenuItem(string text, Action<ContextMenuItemBase> action, bool isChecked, ContextMenuItemBase? parent = null) : SimpleMenuItem(text, action, parent)
+public class CheckableMenuItem(string text, Action<ContextMenuItemBase> action, bool isChecked = false, ContextMenuItemBase? parent = null) : SimpleMenuItem(text, action, parent)
 {
     public bool IsChecked { get; private set; } = isChecked;
     
