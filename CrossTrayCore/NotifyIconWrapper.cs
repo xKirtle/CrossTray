@@ -2,7 +2,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Threading;
 using Windows.Win32.UI.Shell;
@@ -83,24 +82,34 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return InternalShellNotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, NOTIFY_ICON_DATA_FLAGS.NIF_ICON);
     }
 
-    public static ContextMenuItem CreateMenuItem(string itemText, Action action)
+    public static ContextMenuItem CreateMenuItem(string itemText, Action<ContextMenuItem> action)
     {
         return new ContextMenuItem(itemText, action);
     }
 
     public static ContextMenuItem CreateSeparator()
     {
-        return new ContextMenuItem("", () => { }, MENU_ITEM_FLAGS.MF_SEPARATOR);
+        return new ContextMenuItem("", (_) => { }, MENU_ITEM_FLAGS.MF_SEPARATOR);
     }
 
     public static ContextMenuItem CreateSubmenuItem(string itemText, List<ContextMenuItem> submenuItems)
     {
-        var submenuItem = new ContextMenuItem(itemText, () => { }, MENU_ITEM_FLAGS.MF_POPUP, submenuItems);
+        var submenuItem = new ContextMenuItem(itemText, (_) => { }, MENU_ITEM_FLAGS.MF_POPUP, submenuItems);
         foreach (var item in submenuItems)
         {
             item.Parent = submenuItem;
         }
         return submenuItem;
+    }
+    
+    public static CheckableMenuItem CreateCheckableMenuItem(string itemText, Action<ContextMenuItem> action, bool isChecked = false)
+    {
+        return new CheckableMenuItem(itemText, action, isChecked);
+    }
+    
+    public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItem> action, HICON icon)
+    {
+        return new IconMenuItem(itemText, action, icon);
     }
 
     public void CreateContextMenu(List<ContextMenuItem> contextMenuItems)
@@ -111,6 +120,32 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         {
             AddMenuItemRecursive(item, null);
         }
+    }
+    
+    public static HICON LoadIconFromFile(string filePath)
+    {
+        var hIcon = ExtractIcon(HINSTANCE.Null, StringToPCWSTR(filePath), 0);
+        
+        if (hIcon == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("Failed to load icon from file.");
+        }
+
+        return new HICON(hIcon);
+    }
+
+    public static HICON LoadIconFromEmbeddedResource(string resourceName, Assembly resourceAssembly)
+    {
+        var iconPath = $"{resourceAssembly.GetName().Name}.{resourceName}";
+        using var stream = resourceAssembly.GetManifestResourceStream(iconPath);
+        
+        if (stream == null)
+        {
+            throw new InvalidOperationException("Icon resource not found.");
+        }
+        
+        using var bitmap = new Bitmap(stream);
+        return new HICON(bitmap.GetHicon());
     }
 
     public void Dispose()
@@ -131,32 +166,6 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
             TranslateMessage(msg);
             DispatchMessage(msg);
         }
-    }
-    
-    private static HICON LoadIconFromFile(string filePath)
-    {
-        var hIcon = ExtractIcon(HINSTANCE.Null, StringToPCWSTR(filePath), 0);
-        
-        if (hIcon == IntPtr.Zero)
-        {
-            throw new InvalidOperationException("Failed to load icon from file.");
-        }
-
-        return new HICON(hIcon);
-    }
-
-    private static HICON LoadIconFromEmbeddedResource(string resourceName, Assembly resourceAssembly)
-    {
-        var iconPath = $"{resourceAssembly.GetName().Name}.{resourceName}";
-        using var stream = resourceAssembly.GetManifestResourceStream(iconPath);
-        
-        if (stream == null)
-        {
-            throw new InvalidOperationException("Icon resource not found.");
-        }
-        
-        using var bitmap = new Bitmap(stream);
-        return new HICON(bitmap.GetHicon());
     }
 
     /// <summary>
@@ -204,35 +213,38 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     /// <param name="wParam">Often used to pass specific data related to the message. In the case of WM_COMMAND, it holds the identifier of the menu item that was selected.</param>
     /// <param name="lParam">Additional message information, for instance, in the case of mouse messages, holds information about the mouse event (like which button was clicked).</param>
     /// <returns><see cref="LRESULT"/></returns>
-    private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARAM lParam)
+private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == _wmTrayIcon)
     {
-        if (uMsg == _wmTrayIcon)
+        switch ((uint)lParam.Value)
         {
-            switch ((uint)lParam.Value)
-            {
-                case WM_LBUTTONDOWN:
-                    OnLeftClickAction?.Invoke();
-                    break;
-                case WM_RBUTTONDOWN:
-                    OnRightClickAction?.Invoke();
-                    ShowContextMenu(hwnd);
-                    break;
-                case WM_LBUTTONDBLCLK:
-                    OnDoubleClickAction?.Invoke();
-                    break;
-            }
+            case WM_LBUTTONDOWN:
+                OnLeftClickAction?.Invoke();
+                break;
+            case WM_RBUTTONDOWN:
+                OnRightClickAction?.Invoke();
+                ShowContextMenu(hwnd);
+                break;
+            case WM_LBUTTONDBLCLK:
+                OnDoubleClickAction?.Invoke();
+                break;
         }
-        else if (uMsg == WM_COMMAND)
-        {
-            var commandId = (int)wParam.Value;
-            if (_contextMenuItems.TryGetValue(commandId, out var menuItem) && menuItem.Action != null)
-            {
-                menuItem.Action.Invoke();
-            }
-        }
-        
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
+    else if (uMsg == WM_COMMAND)
+    {
+        var commandId = (int)wParam.Value;
+        if (_contextMenuItems.TryGetValue(commandId, out var menuItem))
+        {
+            if (menuItem is CheckableMenuItem checkableMenuItem)
+            {
+                checkableMenuItem.Toggle();
+            }
+            menuItem.Action.Invoke(menuItem);
+        }
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
     
     private unsafe void ShowContextMenu(HWND hwnd)
     {
@@ -252,6 +264,13 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     {
         foreach (var contextMenuItem in menuItems)
         {
+            if (contextMenuItem is IconMenuItem iconMenuItem)
+            {
+                AppendMenu(hMenu, contextMenuItem.Flags, (nuint)contextMenuItem.Id, contextMenuItem.Text.Ptr);
+                SetMenuItemBitmaps(hMenu, (uint)contextMenuItem.Id, MENU_ITEM_FLAGS.MF_BYCOMMAND, iconMenuItem.Bitmap, iconMenuItem.Bitmap);
+                continue;
+            }
+
             if (contextMenuItem.SubItems.Count > 0)
             {
                 var hSubMenu = CreatePopupMenu();
@@ -264,6 +283,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
             }
         }
     }
+
 
     private void AddMenuItemRecursive(ContextMenuItem menuItem, ContextMenuItem? parent)
     {

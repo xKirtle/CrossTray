@@ -30,28 +30,46 @@ public static class Program
         // Define actions for context menu items
         notifyIcon.CreateContextMenu(
         [
-            NotifyIconWrapper.CreateMenuItem("Item 1", () => Console.WriteLine("Item 1 clicked")),
+            NotifyIconWrapper.CreateMenuItem("Item 1", (_) => Console.WriteLine("Item 1 clicked")),
             NotifyIconWrapper.CreateSubmenuItem("Popup 1",
             [
-                NotifyIconWrapper.CreateMenuItem("Subitem 1.1", () => Console.WriteLine("Subitem 1.1 clicked")),
-                NotifyIconWrapper.CreateMenuItem("Subitem 1.2", () => Console.WriteLine("Subitem 1.2 clicked")),
+                NotifyIconWrapper.CreateMenuItem("Subitem 1.1", (_) => Console.WriteLine("Subitem 1.1 clicked")),
+                NotifyIconWrapper.CreateMenuItem("Subitem 1.2", (_) => Console.WriteLine("Subitem 1.2 clicked")),
                 NotifyIconWrapper.CreateSubmenuItem("Popup 2",
                 [
-                    NotifyIconWrapper.CreateMenuItem("Subitem 2.1", () => Console.WriteLine("Subitem 2.1 clicked")),
-                    NotifyIconWrapper.CreateMenuItem("Subitem 2.2", () => Console.WriteLine("Subitem 2.2 clicked")),
+                    NotifyIconWrapper.CreateMenuItem("Subitem 2.1", (_) => Console.WriteLine("Subitem 2.1 clicked")),
+                    NotifyIconWrapper.CreateMenuItem("Subitem 2.2", (_) => Console.WriteLine("Subitem 2.2 clicked")),
                     NotifyIconWrapper.CreateSeparator(),
-                    NotifyIconWrapper.CreateMenuItem("Subitem 2.3", () => Console.WriteLine("Subitem 2.3 clicked")),
-                    
+                    NotifyIconWrapper.CreateMenuItem("Subitem 2.3", (_) => Console.WriteLine("Subitem 2.3 clicked")),
+
                     NotifyIconWrapper.CreateSubmenuItem("Popup 3",
                     [
-                        NotifyIconWrapper.CreateMenuItem("Subitem 3.1", () => Console.WriteLine("Subitem 3.1 clicked")),
-                        NotifyIconWrapper.CreateMenuItem("Subitem 3.2", () => Console.WriteLine("Subitem 3.2 clicked"))
+                        NotifyIconWrapper.CreateMenuItem("Subitem 3.1",
+                            (_) => Console.WriteLine("Subitem 3.1 clicked")),
+                        NotifyIconWrapper.CreateMenuItem("Subitem 3.2", (_) => Console.WriteLine("Subitem 3.2 clicked"))
                     ])
-                ])
+                ]),
+                NotifyIconWrapper.CreateCheckableMenuItem("Checkable item",
+                    (_) => Console.WriteLine("Checkable item clicked"))
             ]),
 
             NotifyIconWrapper.CreateSeparator(),
-            NotifyIconWrapper.CreateMenuItem("Exit", () => Environment.Exit(0))
+            NotifyIconWrapper.CreateCheckableMenuItem("Checkable item 2", (item) =>
+            {
+                var checkableItem = item as CheckableMenuItem;
+                if (checkableItem.IsChecked)
+                {
+                    // ...
+                }
+
+                Console.WriteLine("Checkable item 2 clicked");
+            }),
+
+            NotifyIconWrapper.CreateIconMenuItem("Icon item", (_) => Console.WriteLine("Icon item clicked"),
+                NotifyIconWrapper.LoadIconFromEmbeddedResource("icon.ico", Assembly.GetExecutingAssembly())),
+
+            NotifyIconWrapper.CreateSeparator(),
+            NotifyIconWrapper.CreateMenuItem("Exit", (_) => Environment.Exit(0))
         ]);
 
         // Add the icon to the system tray
@@ -60,14 +78,14 @@ public static class Program
             : "Failed to add icon to the system tray.");
 
         // Show a balloon tip
-        notifyIcon.ShowBalloonTip("Hello", "This is a balloon tip!", NOTIFY_ICON_INFOTIP_FLAGS.NIIF_INFO);
+        // notifyIcon.ShowBalloonTip("Hello", "This is a balloon tip!", NOTIFY_ICON_INFOTIP_FLAGS.NIIF_INFO);
 
         // Keep the application running to see the tray icon
         Console.WriteLine("Press Enter to unmount icon...");
         Console.ReadLine();
 
         notifyIcon.UnmountIcon();
-        
+
         Console.WriteLine("Press Enter to exit...");
         Console.ReadLine();
     }

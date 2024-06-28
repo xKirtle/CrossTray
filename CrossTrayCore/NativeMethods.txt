@@ -9,6 +9,7 @@ WM_LBUTTONDOWN
 WM_RBUTTONDOWN
 WM_LBUTTONDBLCLK
 WM_COMMAND
+WM_DRAWITEM
 AppendMenu
 GetCursorPos
 CreatePopupMenu
@@ -22,3 +23,4 @@ DispatchMessage
 PostThreadMessage
 GetThreadId
 OpenThread
+SetMenuItemBitmaps
