@@ -6,6 +6,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.System.Threading;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
+using CrossTrayCore.ContextMenuItems;
 using static Windows.Win32.PInvoke;
 
 namespace CrossTrayCore;
@@ -23,7 +24,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     private readonly ManualResetEvent _windowCreatedEvent;
     private bool _disposed;
     
-    private readonly Dictionary<int, ContextMenuItem> _contextMenuItems = new();
+    private readonly Dictionary<int, ContextMenuItemBase> _contextMenuItems = new();
     private int _nextMenuItemId = 1;
     
     public Action? OnLeftClickAction { get; set; }
@@ -82,19 +83,20 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return InternalShellNotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, NOTIFY_ICON_DATA_FLAGS.NIF_ICON);
     }
 
-    public static ContextMenuItem CreateMenuItem(string itemText, Action<ContextMenuItem> action)
+    public static ContextMenuItemBase CreateSimpleMenuItem(string itemText, Action<ContextMenuItemBase> action)
     {
-        return new ContextMenuItem(itemText, action);
+        return new SimpleMenuItem(itemText, action);
     }
 
-    public static ContextMenuItem CreateSeparator()
+    public static ContextMenuItemBase CreateSeparator()
     {
-        return new ContextMenuItem("", (_) => { }, MENU_ITEM_FLAGS.MF_SEPARATOR);
+        return new SeparatorMenuItem();
     }
 
-    public static ContextMenuItem CreateSubmenuItem(string itemText, List<ContextMenuItem> submenuItems)
+    public static ContextMenuItemBase CreatePopupMenuItem(string itemText, List<ContextMenuItemBase> submenuItems)
     {
-        var submenuItem = new ContextMenuItem(itemText, (_) => { }, MENU_ITEM_FLAGS.MF_POPUP, submenuItems);
+        var submenuItem = new PopupMenuItem(itemText, submenuItems);
+        
         foreach (var item in submenuItems)
         {
             item.Parent = submenuItem;
@@ -102,17 +104,17 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return submenuItem;
     }
     
-    public static CheckableMenuItem CreateCheckableMenuItem(string itemText, Action<ContextMenuItem> action, bool isChecked = false)
+    public static CheckableMenuItem CreateCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, bool isChecked = false)
     {
         return new CheckableMenuItem(itemText, action, isChecked);
     }
     
-    public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItem> action, HICON icon)
+    public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON icon)
     {
         return new IconMenuItem(itemText, action, icon);
     }
 
-    public void CreateContextMenu(List<ContextMenuItem> contextMenuItems)
+    public void CreateContextMenu(List<ContextMenuItemBase> contextMenuItems)
     {
         _contextMenuItems.Clear();
         _nextMenuItemId = 1;
@@ -240,7 +242,11 @@ private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARA
             {
                 checkableMenuItem.Toggle();
             }
-            menuItem.Action.Invoke(menuItem);
+            
+            if (menuItem is SimpleMenuItem simpleMenuItem)
+            {
+                simpleMenuItem.Action.Invoke(menuItem);
+            }
         }
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -260,32 +266,16 @@ private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARA
         PostMessage(hwnd, 0, 0, 0);
     }
 
-    private static void AddMenuItemsToMenu(HMENU hMenu, List<ContextMenuItem> menuItems)
+    private static void AddMenuItemsToMenu(HMENU hMenu, List<ContextMenuItemBase> menuItems)
     {
         foreach (var contextMenuItem in menuItems)
         {
-            if (contextMenuItem is IconMenuItem iconMenuItem)
-            {
-                AppendMenu(hMenu, contextMenuItem.Flags, (nuint)contextMenuItem.Id, contextMenuItem.Text.Ptr);
-                SetMenuItemBitmaps(hMenu, (uint)contextMenuItem.Id, MENU_ITEM_FLAGS.MF_BYCOMMAND, iconMenuItem.Bitmap, iconMenuItem.Bitmap);
-                continue;
-            }
-
-            if (contextMenuItem.SubItems.Count > 0)
-            {
-                var hSubMenu = CreatePopupMenu();
-                AddMenuItemsToMenu(hSubMenu, contextMenuItem.SubItems);
-                AppendMenu(hMenu, MENU_ITEM_FLAGS.MF_POPUP, (nuint)hSubMenu.Value, contextMenuItem.Text.Ptr);
-            }
-            else
-            {
-                AppendMenu(hMenu, contextMenuItem.Flags, (nuint)contextMenuItem.Id, contextMenuItem.Text.Ptr);
-            }
+            contextMenuItem.AddToMenu(hMenu);
         }
     }
 
 
-    private void AddMenuItemRecursive(ContextMenuItem menuItem, ContextMenuItem? parent)
+    private void AddMenuItemRecursive(ContextMenuItemBase menuItem, ContextMenuItemBase? parent)
     {
         menuItem.Id = _nextMenuItemId++;
         _contextMenuItems[menuItem.Id] = menuItem;

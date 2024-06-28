@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Windows.Win32.UI.Shell;
+using CrossTrayCore.ContextMenuItems;
 
 namespace CrossTrayCore;
 
@@ -12,5 +13,5 @@ public interface INotifyIconWrapper
     bool MountIcon();
     bool UnmountIcon();
     bool RefreshIcon();
-    void CreateContextMenu(List<ContextMenuItem> contextMenuItems);
+    void CreateContextMenu(List<ContextMenuItemBase> contextMenuItems);
 }

@@ -19,3 +19,17 @@ S
 #CrossTrayCore/INotifyIconWrapper.cs,8\7\87c8caa87621e4bd4edbd083a8dedc4b05a94654
 P
  CrossTrayCore/ContextMenuItem.cs,2\e\2e18ff1f5d227e031640bfd6de224ffdb5f5926b
+e
+5CrossTrayCore/ContextMenuItems/ContextMenuItemBase.cs,8\5\851d966c5ec1101a94d7b13317232ab8827432ae
+`
+0CrossTrayCore/ContextMenuItems/SimpleMenuItem.cs,d\e\de628851b4c0306417801dceade543b03ea565d7
+c
+3CrossTrayCore/ContextMenuItems/SeparatorMenuItem.cs,0\8\08f3d6b6c56929bb1b92b16325c1ace0db53bb99
+_
+/CrossTrayCore/ContextMenuItems/PopupMenuItem.cs,0\9\09f467cf983516a780da27c9941fb20cfb7b2b66
+c
+3CrossTrayCore/ContextMenuItems/CheckableMenuitem.cs,8\5\859f6b8b05dc8b0bcd189be6175881d47ac173f1
+c
+3CrossTrayCore/ContextMenuItems/CheckableMenuItem.cs,6\5\65df0ad1ee8a1dba9874d6f0b4f447e1d33b70e9
+^
+.CrossTrayCore/ContextMenuItems/IconMenuItem.cs,1\a\1aa242cdb6dddb1215aad24065fc8d455a32a481

@@ -1,8 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.Versioning;
-using Windows.Win32.UI.Shell;
-using Windows.Win32.UI.WindowsAndMessaging;
 using CrossTrayCore;
+using CrossTrayCore.ContextMenuItems;
 
 namespace CrossTrayTestApp;
 
@@ -30,23 +29,24 @@ public static class Program
         // Define actions for context menu items
         notifyIcon.CreateContextMenu(
         [
-            NotifyIconWrapper.CreateMenuItem("Item 1", (_) => Console.WriteLine("Item 1 clicked")),
-            NotifyIconWrapper.CreateSubmenuItem("Popup 1",
+            NotifyIconWrapper.CreateSimpleMenuItem("Item 1", (_) => Console.WriteLine("Item 1 clicked")),
+            NotifyIconWrapper.CreatePopupMenuItem("Popup 0", []),
+            NotifyIconWrapper.CreatePopupMenuItem("Popup 1",
             [
-                NotifyIconWrapper.CreateMenuItem("Subitem 1.1", (_) => Console.WriteLine("Subitem 1.1 clicked")),
-                NotifyIconWrapper.CreateMenuItem("Subitem 1.2", (_) => Console.WriteLine("Subitem 1.2 clicked")),
-                NotifyIconWrapper.CreateSubmenuItem("Popup 2",
+                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.1", (_) => Console.WriteLine("Subitem 1.1 clicked")),
+                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.2", (_) => Console.WriteLine("Subitem 1.2 clicked")),
+                NotifyIconWrapper.CreatePopupMenuItem("Popup 2",
                 [
-                    NotifyIconWrapper.CreateMenuItem("Subitem 2.1", (_) => Console.WriteLine("Subitem 2.1 clicked")),
-                    NotifyIconWrapper.CreateMenuItem("Subitem 2.2", (_) => Console.WriteLine("Subitem 2.2 clicked")),
+                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.1", (_) => Console.WriteLine("Subitem 2.1 clicked")),
+                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.2", (_) => Console.WriteLine("Subitem 2.2 clicked")),
                     NotifyIconWrapper.CreateSeparator(),
-                    NotifyIconWrapper.CreateMenuItem("Subitem 2.3", (_) => Console.WriteLine("Subitem 2.3 clicked")),
+                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.3", (_) => Console.WriteLine("Subitem 2.3 clicked")),
 
-                    NotifyIconWrapper.CreateSubmenuItem("Popup 3",
+                    NotifyIconWrapper.CreatePopupMenuItem("Popup 3",
                     [
-                        NotifyIconWrapper.CreateMenuItem("Subitem 3.1",
+                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.1",
                             (_) => Console.WriteLine("Subitem 3.1 clicked")),
-                        NotifyIconWrapper.CreateMenuItem("Subitem 3.2", (_) => Console.WriteLine("Subitem 3.2 clicked"))
+                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.2", (_) => Console.WriteLine("Subitem 3.2 clicked"))
                     ])
                 ]),
                 NotifyIconWrapper.CreateCheckableMenuItem("Checkable item",
@@ -54,13 +54,10 @@ public static class Program
             ]),
 
             NotifyIconWrapper.CreateSeparator(),
-            NotifyIconWrapper.CreateCheckableMenuItem("Checkable item 2", (item) =>
+            NotifyIconWrapper.CreateCheckableMenuItem("Checkable item 2", item =>
             {
                 var checkableItem = item as CheckableMenuItem;
-                if (checkableItem.IsChecked)
-                {
-                    // ...
-                }
+                Console.WriteLine($"Checkable item 2 is {(checkableItem.IsChecked ? "checked" : "not checked")}");
 
                 Console.WriteLine("Checkable item 2 clicked");
             }),
@@ -69,7 +66,7 @@ public static class Program
                 NotifyIconWrapper.LoadIconFromEmbeddedResource("icon.ico", Assembly.GetExecutingAssembly())),
 
             NotifyIconWrapper.CreateSeparator(),
-            NotifyIconWrapper.CreateMenuItem("Exit", (_) => Environment.Exit(0))
+            NotifyIconWrapper.CreateSimpleMenuItem("Exit", (_) => Environment.Exit(0))
         ]);
 
         // Add the icon to the system tray
@@ -78,7 +75,7 @@ public static class Program
             : "Failed to add icon to the system tray.");
 
         // Show a balloon tip
-        // notifyIcon.ShowBalloonTip("Hello", "This is a balloon tip!", NOTIFY_ICON_INFOTIP_FLAGS.NIIF_INFO);
+        notifyIcon.ShowBalloonTip("Hello", "This is a balloon tip!", NOTIFY_ICON_INFOTIP_FLAGS.NIIF_INFO);
 
         // Keep the application running to see the tray icon
         Console.WriteLine("Press Enter to unmount icon...");
