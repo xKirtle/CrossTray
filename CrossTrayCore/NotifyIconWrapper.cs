@@ -97,6 +97,11 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return new CheckableMenuItem(itemText, action, isChecked);
     }
     
+    public static CustomCheckableMenuItem CreateCustomCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON checkedHicon, HICON uncheckedHicon, bool isChecked = false)
+    {
+        return new CustomCheckableMenuItem(itemText, action, checkedHicon, uncheckedHicon, isChecked);
+    }
+    
     public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON icon)
     {
         return new IconMenuItem(itemText, action, icon);

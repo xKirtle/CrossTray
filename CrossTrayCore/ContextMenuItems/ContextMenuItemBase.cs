@@ -19,4 +19,8 @@ public abstract class ContextMenuItemBase(
     {
         PInvoke.AppendMenu(hMenu, Flags, (uint)Id, Text.Ptr);
     }
+    
+    // TODO: Add a disabled property. If true, do Flags &= MENU_ITEM_FLAGS.MF_ENABLED on AddToMenu?
+    // Hard to apply a disabled property to everything, since not all menu items are calling our base AddToMenu...
 }
+
