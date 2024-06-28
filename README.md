@@ -1,7 +1,7 @@
 ﻿<h1 align="center">
   <br>
   <a href="#">
-    <img src="https://i.imgur.com/hiw4Roi.png" alt="CrossTray" width="200">
+    <img src="./media/CrossTray.png" alt="CrossTray" width="256">
   </a>
   <br>
   CrossTray
