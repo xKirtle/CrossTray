@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.Versioning;
+using Windows.Win32.UI.Shell;
 using CrossTrayCore;
 using CrossTrayCore.ContextMenuItems;
 
@@ -12,14 +13,9 @@ public static class Program
     {
         var tooltip = "CrossTray Test App";
 
-        // Create an instance of NotifyIconWrapper
-        using var notifyIcon = new NotifyIconWrapper(tooltip);
-
-        // Set the icon from the build output folder
-        // notifyIcon.SetIconFromFile("icon.ico");
-
-        // Set the icon from the embedded resource
-        notifyIcon.SetIconFromEmbeddedResource("icon.ico", Assembly.GetExecutingAssembly());
+        // Create an instance of NotifyIconWrapper. Load the icon either from an embedded resource or a file.
+        var icon = NotifyIconWrapper.LoadIconFromEmbeddedResource("icon.ico", Assembly.GetExecutingAssembly());
+        using var notifyIcon = new NotifyIconWrapper(tooltip, icon);
 
         // Define actions for clicks
         notifyIcon.OnLeftClickAction = () => Console.WriteLine("Tray icon left-clicked");

@@ -31,10 +31,10 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     public Action? OnDoubleClickAction { get; set; }
     public Action? OnRightClickAction { get; set; }
 
-    public NotifyIconWrapper(string tooltip)
+    public NotifyIconWrapper(string tooltip, HICON hIcon = default)
     {
         _tooltip = tooltip;
-        _hIcon = new HICON(SystemIcons.Application.Handle);
+        _hIcon = hIcon == default ? new HICON(SystemIcons.Application.Handle) : hIcon;
         _windowCreatedEvent = new ManualResetEvent(initialState: false);
         
         // Start the thread that will handle the NotifyIcon message loop
@@ -43,18 +43,6 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         
         // and wait for the window handle to be created
         _windowCreatedEvent.WaitOne();
-    }
-    
-    public void SetIconFromFile(string iconFilePath)
-    {
-        _hIcon = LoadIconFromFile(iconFilePath);
-        RefreshIcon();
-    }
-
-    public void SetIconFromEmbeddedResource(string resourceName, Assembly resourceAssembly)
-    {
-        _hIcon = LoadIconFromEmbeddedResource(resourceName, resourceAssembly);
-        RefreshIcon();
     }
 
     public void SetTooltip(string newTooltip)
