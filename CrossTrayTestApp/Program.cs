@@ -25,7 +25,11 @@ public static class Program
         // Define actions for context menu items
         notifyIcon.CreateContextMenu(
         [
-            NotifyIconWrapper.CreateSimpleMenuItem("Item 1", (_) => Console.WriteLine("Item 1 clicked")),
+            NotifyIconWrapper.CreateSimpleMenuItem("One use item", item =>
+            {
+                Console.WriteLine("One use item clicked");
+                item.IsEnabled = false;
+            }),
             NotifyIconWrapper.CreatePopupMenuItem("Popup 0", []),
             NotifyIconWrapper.CreatePopupMenuItem("Popup 1",
             [

@@ -10,8 +10,8 @@ public class CustomCheckableMenuItem : CheckableMenuItem
     private HBITMAP CheckedBitmap { get; }
     private HBITMAP UncheckedBitmap { get; }
 
-    public CustomCheckableMenuItem(string text, Action<ContextMenuItemBase> action, HICON checkedHicon, HICON uncheckedHicon, bool isChecked = false, ContextMenuItemBase? parent = null)
-        : base(text, action, isChecked, parent)
+    public CustomCheckableMenuItem(string text, Action<ContextMenuItemBase> action, HICON checkedHicon, HICON uncheckedHicon, bool isChecked = false, bool isEnabled = true, ContextMenuItemBase? parent = null)
+        : base(text, action, isChecked, isEnabled, parent)
     {
         CheckedBitmap = IconToBitmap(checkedHicon);
         UncheckedBitmap = IconToBitmap(uncheckedHicon);

@@ -4,7 +4,8 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace CrossTrayCore.ContextMenuItems;
 
-public class IconMenuItem(string text, Action<ContextMenuItemBase> action, HICON icon, ContextMenuItemBase? parent = null) : SimpleMenuItem(text, action, parent)
+public class IconMenuItem(string text, Action<ContextMenuItemBase> action, HICON icon, bool isEnabled = true, ContextMenuItemBase? parent = null) 
+    : SimpleMenuItem(text, action, isEnabled, parent)
 {
     public HICON Icon { get; } = icon;
     public HBITMAP Bitmap { get; } = IconToBitmap(icon);

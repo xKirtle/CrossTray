@@ -3,8 +3,8 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace CrossTrayCore.ContextMenuItems;
 
-public class PopupMenuItem(string text, List<ContextMenuItemBase>? subItems = null, ContextMenuItemBase? parent = null)
-    : ContextMenuItemBase(text, MENU_ITEM_FLAGS.MF_POPUP, subItems, parent)
+public class PopupMenuItem(string text, bool isEnabled = true, List<ContextMenuItemBase>? subItems = null, ContextMenuItemBase? parent = null)
+    : ContextMenuItemBase(text, MENU_ITEM_FLAGS.MF_POPUP, isEnabled, subItems, parent)
 {
     public override void AddToMenu(HMENU hMenu)
     {

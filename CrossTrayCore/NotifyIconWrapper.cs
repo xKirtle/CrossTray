@@ -15,7 +15,7 @@ namespace CrossTrayCore;
 public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
 {
     private HWND _hwnd;
-    private HICON _hIcon;
+    private readonly HICON _hIcon;
     private string _tooltip;
     private const uint UId = 1;
     private readonly uint _wmTrayIcon = RegisterWindowMessage("WM_TRAYICON");
@@ -71,9 +71,9 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return InternalShellNotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, NOTIFY_ICON_DATA_FLAGS.NIF_ICON);
     }
 
-    public static ContextMenuItemBase CreateSimpleMenuItem(string itemText, Action<ContextMenuItemBase> action)
+    public static ContextMenuItemBase CreateSimpleMenuItem(string itemText, Action<ContextMenuItemBase> action, bool isEnabled = true)
     {
-        return new SimpleMenuItem(itemText, action);
+        return new SimpleMenuItem(itemText, action, isEnabled);
     }
 
     public static ContextMenuItemBase CreateSeparator()
@@ -81,9 +81,9 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return new SeparatorMenuItem();
     }
 
-    public static ContextMenuItemBase CreatePopupMenuItem(string itemText, List<ContextMenuItemBase> submenuItems)
+    public static ContextMenuItemBase CreatePopupMenuItem(string itemText, List<ContextMenuItemBase> submenuItems, bool isEnabled = true)
     {
-        var submenuItem = new PopupMenuItem(itemText, submenuItems);
+        var submenuItem = new PopupMenuItem(itemText, isEnabled, submenuItems);
         
         foreach (var item in submenuItems)
         {
@@ -92,19 +92,19 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         return submenuItem;
     }
     
-    public static CheckableMenuItem CreateCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, bool isChecked = false)
+    public static CheckableMenuItem CreateCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, bool isChecked = false, bool isEnabled = true)
     {
-        return new CheckableMenuItem(itemText, action, isChecked);
+        return new CheckableMenuItem(itemText, action, isChecked, isEnabled);
     }
     
-    public static CustomCheckableMenuItem CreateCustomCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON checkedHicon, HICON uncheckedHicon, bool isChecked = false)
+    public static CustomCheckableMenuItem CreateCustomCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON checkedHicon, HICON uncheckedHicon, bool isChecked = false, bool isEnabled = true)
     {
-        return new CustomCheckableMenuItem(itemText, action, checkedHicon, uncheckedHicon, isChecked);
+        return new CustomCheckableMenuItem(itemText, action, checkedHicon, uncheckedHicon, isChecked, isEnabled);
     }
     
-    public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON icon)
+    public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON icon, bool isEnabled = true)
     {
-        return new IconMenuItem(itemText, action, icon);
+        return new IconMenuItem(itemText, action, icon, isEnabled);
     }
 
     public void CreateContextMenu(List<ContextMenuItemBase> contextMenuItems)
