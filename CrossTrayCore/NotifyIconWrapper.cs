@@ -85,7 +85,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
 
     public static ContextMenuItemBase CreatePopupMenuItem(string itemText, List<ContextMenuItemBase> submenuItems, bool isEnabled = true)
     {
-        var submenuItem = new PopupMenuItem(itemText, isEnabled, submenuItems);
+        var submenuItem = new PopupMenuItem(itemText, submenuItems, isEnabled);
         
         foreach (var item in submenuItems)
         {
@@ -101,12 +101,12 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     
     public static CustomCheckableMenuItem CreateCustomCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON checkedHicon, HICON uncheckedHicon, bool isChecked = false, bool isEnabled = true)
     {
-        return new CustomCheckableMenuItem(itemText, action, checkedHicon, uncheckedHicon, isChecked, isEnabled);
+        return new CustomCheckableMenuItem(itemText, checkedHicon, uncheckedHicon, action, isChecked, isEnabled);
     }
     
     public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON icon, bool isEnabled = true)
     {
-        return new IconMenuItem(itemText, action, icon, isEnabled);
+        return new IconMenuItem(itemText, icon, action, isEnabled);
     }
 
     public void CreateContextMenu(List<ContextMenuItemBase> contextMenuItems)

@@ -31,69 +31,30 @@ public static class Program
         notifyIcon.OnRightClick += HandleTrayIconClick;
         notifyIcon.OnDoubleLeftClick += HandleTrayIconClick;
         
-        var contextMenuItems = new List<ContextMenuItemBase> {
+        // Define actions for context menu items
+        void HandleMenuItemAction(ContextMenuItemBase item)
+        {
+            Console.WriteLine($"Menu item clicked: {item.Text}");
+        }
+        
+        var contextMenuItems = new List<ContextMenuItemBase> 
+        {
             new PopupMenuItem("Submenu", new List<ContextMenuItemBase>
             {
-                new SimpleMenuItem("Sub item 1", _ => { }),
+                new SimpleMenuItem("Sub item 1", HandleMenuItemAction),
                 new SimpleMenuItem("Sub item 2", _ => { })
             }),
             new SeparatorMenuItem(),
-            new IconMenuItem("Item with Icon", redIcon, _ => { }),
-            new SimpleMenuItem("Simple Item", _ => { }),
+            new IconMenuItem("Item with Icon", redIcon, HandleMenuItemAction),
+            new SimpleMenuItem("Simple Item", _ => { }, isEnabled: false),
             new CheckableMenuItem("Checkable Item", item =>
             {
                 var checkableItem = item as CheckableMenuItem;
                 Console.WriteLine($"IsChecked: {checkableItem?.IsChecked}");
             }, isChecked: true)
         };
-
-        // Define actions for context menu items
-        notifyIcon.CreateContextMenu(
-        [
-            NotifyIconWrapper.CreateSimpleMenuItem("One use item", item =>
-            {
-                Console.WriteLine("One use item clicked");
-                item.IsEnabled = false;
-            }),
-            NotifyIconWrapper.CreatePopupMenuItem("Popup 0", []),
-            NotifyIconWrapper.CreatePopupMenuItem("Popup 1",
-            [
-                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.1", _ => Console.WriteLine("Subitem 1.1 clicked")),
-                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.2", _ => Console.WriteLine("Subitem 1.2 clicked")),
-                NotifyIconWrapper.CreatePopupMenuItem("Popup 2",
-                [
-                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.1", _ => Console.WriteLine("Subitem 2.1 clicked")),
-                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.2", _ => Console.WriteLine("Subitem 2.2 clicked")),
-                    NotifyIconWrapper.CreateSeparator(),
-                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.3", _ => Console.WriteLine("Subitem 2.3 clicked")),
-
-                    NotifyIconWrapper.CreatePopupMenuItem("Popup 3",
-                    [
-                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.1", _ => Console.WriteLine("Subitem 3.1 clicked")),
-                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.2", _ => Console.WriteLine("Subitem 3.2 clicked"))
-                    ])
-                ]),
-                NotifyIconWrapper.CreateCheckableMenuItem("Checkable item 1.1",
-                    _ => Console.WriteLine("Checkable item 1.1 clicked"))
-            ]),
-
-            NotifyIconWrapper.CreateSeparator(),
-            NotifyIconWrapper.CreateCheckableMenuItem("Checkable item 1", item =>
-            {
-                var checkableItem = item as CheckableMenuItem;
-                Console.WriteLine($"Checkable item 1 is {(checkableItem.IsChecked ? "checked" : "not checked")}");
-
-                Console.WriteLine("Checkable item 1 clicked");
-            }),
-            
-            NotifyIconWrapper.CreateCustomCheckableMenuItem("Custom checkable item", _ => Console.WriteLine("Custom checkable item clicked"),
-                redIcon, greenIcon),
-
-            NotifyIconWrapper.CreateSeparator(),
-            
-            NotifyIconWrapper.CreateIconMenuItem("Static Icon item", _ => Console.WriteLine("Static Icon item clicked"), greenIcon),
-            NotifyIconWrapper.CreateSimpleMenuItem("Exit", _ => Environment.Exit(0))
-        ]);
+        
+        notifyIcon.CreateContextMenu(contextMenuItems);
 
         // Add the icon to the system tray
         Console.WriteLine(notifyIcon.MountIcon()

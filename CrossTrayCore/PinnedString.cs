@@ -18,4 +18,6 @@ public class PinnedString(string str) : IDisposable
             _disposed = true;
         }
     }
+
+    public override string ToString() => str;
 }

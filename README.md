@@ -90,7 +90,7 @@ var contextMenuItems = new List<ContextMenuItemBase> {
     }),
     new SeparatorMenuItem(),
     new IconMenuItem("Item with Icon", redIcon, _ => { }),
-    new SimpleMenuItem("Simple Item", _ => { }),
+    new SimpleMenuItem("Simple Item", _ => { }, isEnabled: false),
     new CheckableMenuItem("Checkable Item", item =>
     {
         var checkableItem = item as CheckableMenuItem;
