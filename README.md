@@ -49,12 +49,12 @@ Creating a tray icon is very simple with CrossTray. All you need is an icon and 
 
 ```csharp
 // Load the icon either from an embedded resource or a file.
-var icon = NotifyIconWrapper.LoadIconFromEmbeddedResource("embedded_icon.ico", Assembly.GetExecutingAssembly());
-// var icon = NotifyIconWrapper.LoadIconFromFile("file_icon.ico");
+var icon = TrayIcon.LoadIconFromEmbeddedResource("embedded_icon.ico", Assembly.GetExecutingAssembly());
+// var icon = TrayIcon.LoadIconFromFile("file_icon.ico");
 
-// NotifyIconWrapper implements IDisposable, so it is recommended to either use it within a using block or call Dispose() when you are done.
-using var notifyIcon = new NotifyIconWrapper("Tooltip Text", icon);
-notifyIcon.MountIcon();
+// TrayIcon implements IDisposable, so it is recommended to either use it within a using block or call Dispose() when you are done.
+using var trayIcon = new TrayIcon("Tooltip Text", icon);
+trayIcon.MountIcon();
 ```
 
 ### Defining Actions 
@@ -62,9 +62,9 @@ notifyIcon.MountIcon();
 You can also define actions for left-click, right-click, and double left-click events on the tray icon.
 
 ```csharp
-notifyIcon.OnLeftClick += (sender, args) => { ... };
-notifyIcon.OnRightClick += (sender, args) => { ... };
-notifyIcon.OnDoubleLeftClick += (sender, args) => { ... };
+trayIcon.OnLeftClick += (sender, args) => { ... };
+trayIcon.OnRightClick += (sender, args) => { ... };
+trayIcon.OnDoubleLeftClick += (sender, args) => { ... };
 ```
 
 ### Creating a Context Menu
@@ -98,7 +98,7 @@ var contextMenuItems = new List<ContextMenuItemBase> {
     }, isChecked: true)
 };
 
-notifyIcon.CreateContextMenu(contextMenuItems);
+trayIcon.CreateContextMenu(contextMenuItems);
 ```
 
 If you decide to add a context menu to the tray icon, you might want to decide how the context menu is shown.
@@ -109,7 +109,7 @@ However, to modify how the context menu is shown, you can only change this behav
 ```csharp
 // Show the context menu on left-click, right-click, and double left-click.
 var showContextMenuFlag = ClickTypes.Left | ClickTypes.Right | ClickTypes.DoubleLeft;
-using var notifyIcon = new NotifyIconWrapper("Tooltip Text", icon, showContextMenuFlag);
+using var trayIcon = new TrayIcon("Tooltip Text", icon, showContextMenuFlag);
 ```
 
 ### Example Windows Tray Icon
