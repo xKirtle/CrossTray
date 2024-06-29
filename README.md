@@ -50,30 +50,67 @@ $ dotnet build
 # (Assuming you have a .NET project set up)
 $ dotnet add reference ../crosstray/src/CrossTray/CrossTray.csproj
 ```
+## Code Example
 
-## Sample Code
+### Creating a Tray Icon
+Creating a tray icon is very simple with CrossTray. All you need is an icon and a tooltip text.
 
 ```csharp
-var icon = NotifyIconWrapper.LoadIconFromEmbeddedResource("icon.ico", Assembly.GetExecutingAssembly());
-using var notifyIcon = new NotifyIconWrapper("Tooltip name", icon);
+// Load the icon either from an embedded resource or a file.
+var icon = NotifyIconWrapper.LoadIconFromEmbeddedResource("embedded_icon.ico", Assembly.GetExecutingAssembly());
+// var icon = NotifyIconWrapper.LoadIconFromFile("file_icon.ico");
 
-var menuItems = new List<ContextMenuItemBase>
-{
-    new PopupMenuItem("Submenu", new List<ContextMenuItemBase>()
-    {
-        new SimpleMenuItem("Sub Item 1", item => Console.WriteLine("Sub item 1 clicked!")),
-        new SimpleMenuItem("Sub Item 2", item => Console.WriteLine("Sub item 2 clicked!"))
-    }),
-    new SeparatorMenuItem(),
-    new IconMenuItem("Item with Icon", item => Console.WriteLine("Icon item clicked!"), icon),
-    new SimpleMenuItem("Simple Item", item => Console.WriteLine("Simple item clicked!")),
-    new CheckableMenuItem("Checkable Item", item => Console.WriteLine("Checkable item toggled!"))
-};
-
-notifyIcon.CreateContextMenu(menuItems);
+// NotifyIconWrapper implements IDisposable, so it is recommended to either use it within a using block or call Dispose() when you are done.
+using var notifyIcon = new NotifyIconWrapper("Tooltip Text", icon);
 notifyIcon.MountIcon();
 ```
-Would result in the following (Windows) tray icon:
+
+### Defining Actions 
+
+You can also define actions for left-click, right-click, and double-click events on the tray icon.
+
+```csharp
+notifyIcon.LeftClick += (sender, args) => Console.WriteLine("Left-clicked!");
+notifyIcon.RightClick += (sender, args) => Console.WriteLine("Right-clicked!");
+notifyIcon.DoubleClick += (sender, args) => Console.WriteLine("Double-clicked!");
+```
+
+### Creating a Context Menu
+
+You can also create a context menu for the tray icon by providing a list of menu items.
+The library provides several types of menu items that can be added to the context menu:
+
+- `SimpleMenuItem`: A simple menu item with text and an action.
+- `IconMenuItem`: A menu item with text, an icon, and an action.
+- `CheckableMenuItem`: A menu item with text, a checkable state, and an action.
+- `CustomCheckableMenuItem`: A menu item with text, a checkable state with a custom icon for each state, and an action.
+- `SeparatorMenuItem`: A separator between menu items.
+- `PopupMenuItem`: A submenu with a list of menu items. (If the submenu is empty, the menu item will be ignored.)
+
+To create a context menu, you just need to call the `CreateContextMenu` method with a list of menu items.
+
+```csharp
+var contextMenuItems = [
+    new SimpleMenuItem("Simple Item", item => Console.WriteLine("Simple item clicked!")),
+    new SeparatorMenuItem(),
+    new SimpleMenuItem("Exit", item => Environment.Exit(0))
+];
+
+notifyIcon.CreateContextMenu(contextMenuItems);
+```
+
+If you decide to add a context menu to the tray icon, you might want to decide what happens when the user clicks on the icon.
+In the section <a href="#defining-actions">Defining Actions</a>, we showed how to define actions for left-click, right-click, and double-click events on the tray icon.
+
+However, to modify how the context menu is shown, you can only change this behaviour by providing a custom flag to the constructor.
+
+```csharp
+// Show the context menu on left-click, right-click, and double-click.
+var showContextMenuFlag = NotifyIconWrapper.WmLeftButtonDown | NotifyIconWrapper.WmRightButtonDown | NotifyIconWrapper.WmDoubleClick;
+using var notifyIcon = new NotifyIconWrapper("Tooltip Text", icon, showContextMenuFlag);
+```
+
+### Example Windows Tray Icon
 
 ![Example Windows Tray Icon](media/ExampleTrayIcon.png)
 

@@ -19,6 +19,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     private string _tooltip;
     private const uint UId = 1;
     private readonly uint _wmTrayIcon = RegisterWindowMessage("WM_TRAYICON");
+    private readonly uint _showContextMenuFlags;
 
     private readonly Thread _thread;
     private readonly ManualResetEvent _windowCreatedEvent;
@@ -27,14 +28,18 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     private readonly Dictionary<int, ContextMenuItemBase> _contextMenuItems = new();
     private int _nextMenuItemId = 1;
     
+    public const uint WmLeftButtonDown = 513U;
+    public const uint WmRightButtonDown = 516U;
+    public const uint WmLeftButtonDoubleClick = 515U;
     public Action? OnLeftClickAction { get; set; }
     public Action? OnDoubleClickAction { get; set; }
     public Action? OnRightClickAction { get; set; }
 
-    public NotifyIconWrapper(string tooltip, HICON hIcon = default)
+    public NotifyIconWrapper(string tooltip, HICON hIcon = default, uint showContextMenuFlags = WmLeftButtonDown)
     {
         _tooltip = tooltip;
         _hIcon = hIcon == default ? new HICON(SystemIcons.Application.Handle) : hIcon;
+        _showContextMenuFlags = showContextMenuFlags;
         _windowCreatedEvent = new ManualResetEvent(initialState: false);
         
         // Start the thread that will handle the NotifyIcon message loop
@@ -210,19 +215,31 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     /// <returns><see cref="LRESULT"/></returns>
 private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARAM lParam)
 {
+    // TODO: Refactor method to reduce complexity
+    
     if (uMsg == _wmTrayIcon)
     {
+        void ShowContextMenuIfFlagSet(uint flag)
+        {
+            if ((_showContextMenuFlags & flag) == flag)
+            {
+                ShowContextMenu(hwnd);
+            }
+        }
+        
         switch ((uint)lParam.Value)
         {
-            case WM_LBUTTONDOWN:
+            case WmLeftButtonDown:
                 OnLeftClickAction?.Invoke();
+                ShowContextMenuIfFlagSet(WmLeftButtonDown);
                 break;
-            case WM_RBUTTONDOWN:
+            case WmRightButtonDown:
                 OnRightClickAction?.Invoke();
-                ShowContextMenu(hwnd);
+                ShowContextMenuIfFlagSet(WmRightButtonDown);
                 break;
-            case WM_LBUTTONDBLCLK:
+            case WmLeftButtonDoubleClick:
                 OnDoubleClickAction?.Invoke();
+                ShowContextMenuIfFlagSet(WmLeftButtonDoubleClick);
                 break;
         }
     }

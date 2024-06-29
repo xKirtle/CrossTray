@@ -13,9 +13,13 @@ public static class Program
     {
         const string tooltip = "CrossTray Test App";
 
-        // Create an instance of NotifyIconWrapper. Load the icon either from an embedded resource or a file.
-        var icon = NotifyIconWrapper.LoadIconFromEmbeddedResource("red_icon.ico", Assembly.GetExecutingAssembly());
-        using var notifyIcon = new NotifyIconWrapper(tooltip, icon);
+        // Load the icon either from an embedded resource or a file.
+        var redIcon = NotifyIconWrapper.LoadIconFromEmbeddedResource("red_icon.ico", Assembly.GetExecutingAssembly());
+        var greenIcon = NotifyIconWrapper.LoadIconFromEmbeddedResource("green_icon.ico", Assembly.GetExecutingAssembly());
+        var blueIcon = NotifyIconWrapper.LoadIconFromFile("blue_icon.ico");
+      
+        // Create an instance of NotifyIconWrapper.
+        using var notifyIcon = new NotifyIconWrapper(tooltip, blueIcon, NotifyIconWrapper.WmLeftButtonDown);
 
         // Define actions for clicks
         notifyIcon.OnLeftClickAction = () => Console.WriteLine("Tray icon left-clicked");
@@ -33,23 +37,23 @@ public static class Program
             NotifyIconWrapper.CreatePopupMenuItem("Popup 0", []),
             NotifyIconWrapper.CreatePopupMenuItem("Popup 1",
             [
-                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.1", (_) => Console.WriteLine("Subitem 1.1 clicked")),
-                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.2", (_) => Console.WriteLine("Subitem 1.2 clicked")),
+                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.1", _ => Console.WriteLine("Subitem 1.1 clicked")),
+                NotifyIconWrapper.CreateSimpleMenuItem("Subitem 1.2", _ => Console.WriteLine("Subitem 1.2 clicked")),
                 NotifyIconWrapper.CreatePopupMenuItem("Popup 2",
                 [
-                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.1", (_) => Console.WriteLine("Subitem 2.1 clicked")),
-                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.2", (_) => Console.WriteLine("Subitem 2.2 clicked")),
+                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.1", _ => Console.WriteLine("Subitem 2.1 clicked")),
+                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.2", _ => Console.WriteLine("Subitem 2.2 clicked")),
                     NotifyIconWrapper.CreateSeparator(),
-                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.3", (_) => Console.WriteLine("Subitem 2.3 clicked")),
+                    NotifyIconWrapper.CreateSimpleMenuItem("Subitem 2.3", _ => Console.WriteLine("Subitem 2.3 clicked")),
 
                     NotifyIconWrapper.CreatePopupMenuItem("Popup 3",
                     [
-                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.1", (_) => Console.WriteLine("Subitem 3.1 clicked")),
-                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.2", (_) => Console.WriteLine("Subitem 3.2 clicked"))
+                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.1", _ => Console.WriteLine("Subitem 3.1 clicked")),
+                        NotifyIconWrapper.CreateSimpleMenuItem("Subitem 3.2", _ => Console.WriteLine("Subitem 3.2 clicked"))
                     ])
                 ]),
                 NotifyIconWrapper.CreateCheckableMenuItem("Checkable item 1.1",
-                    (_) => Console.WriteLine("Checkable item 1.1 clicked"))
+                    _ => Console.WriteLine("Checkable item 1.1 clicked"))
             ]),
 
             NotifyIconWrapper.CreateSeparator(),
@@ -61,15 +65,13 @@ public static class Program
                 Console.WriteLine("Checkable item 1 clicked");
             }),
             
-            NotifyIconWrapper.CreateCustomCheckableMenuItem("Custom checkable item", (_) => Console.WriteLine("Custom checkable item clicked"),
-                NotifyIconWrapper.LoadIconFromEmbeddedResource("red_icon.ico", Assembly.GetExecutingAssembly()),
-                NotifyIconWrapper.LoadIconFromEmbeddedResource("green_icon.ico", Assembly.GetExecutingAssembly())),
+            NotifyIconWrapper.CreateCustomCheckableMenuItem("Custom checkable item", _ => Console.WriteLine("Custom checkable item clicked"),
+                redIcon, greenIcon),
 
             NotifyIconWrapper.CreateSeparator(),
             
-            NotifyIconWrapper.CreateIconMenuItem("Static Icon item", (_) => Console.WriteLine("Static Icon item clicked"),
-                NotifyIconWrapper.LoadIconFromEmbeddedResource("green_icon.ico", Assembly.GetExecutingAssembly())),
-            NotifyIconWrapper.CreateSimpleMenuItem("Exit", (_) => Environment.Exit(0))
+            NotifyIconWrapper.CreateIconMenuItem("Static Icon item", _ => Console.WriteLine("Static Icon item clicked"), greenIcon),
+            NotifyIconWrapper.CreateSimpleMenuItem("Exit", _ => Environment.Exit(0))
         ]);
 
         // Add the icon to the system tray
