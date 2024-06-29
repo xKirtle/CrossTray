@@ -14,12 +14,12 @@ public static class Program
         const string tooltip = "CrossTray Test App";
 
         // Load the icon either from an embedded resource or a file.
-        var redIcon = NotifyIconWrapper.LoadIconFromEmbeddedResource("red_icon.ico", Assembly.GetExecutingAssembly());
-        var greenIcon = NotifyIconWrapper.LoadIconFromEmbeddedResource("green_icon.ico", Assembly.GetExecutingAssembly());
-        var blueIcon = NotifyIconWrapper.LoadIconFromFile("blue_icon.ico");
+        var redIcon = TrayIcon.LoadIconFromEmbeddedResource("red_icon.ico", Assembly.GetExecutingAssembly());
+        var greenIcon = TrayIcon.LoadIconFromEmbeddedResource("green_icon.ico", Assembly.GetExecutingAssembly());
+        var blueIcon = TrayIcon.LoadIconFromFile("blue_icon.ico");
       
         // Create an instance of NotifyIconWrapper.
-        using var notifyIcon = new NotifyIconWrapper(tooltip, blueIcon, ClickTypes.Right | ClickTypes.DoubleLeft);
+        using var notifyIcon = new TrayIcon(tooltip, blueIcon, ClickTypes.Right | ClickTypes.DoubleLeft);
 
         // Define actions for clicks
         void HandleTrayIconClick(object? sender, NotifyIconEventArgs e)

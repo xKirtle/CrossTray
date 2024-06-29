@@ -12,7 +12,7 @@ using static Windows.Win32.PInvoke;
 namespace CrossTrayCore;
 
 [SupportedOSPlatform("windows6.0.6000")]
-public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
+public class TrayIcon : ITrayIcon, IDisposable
 {
     private HWND _hwnd;
     private readonly HICON _hIcon;
@@ -32,7 +32,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     public event EventHandler<NotifyIconEventArgs>? OnRightClick;
     public event EventHandler<NotifyIconEventArgs>? OnDoubleLeftClick;
 
-    public NotifyIconWrapper(string tooltip, HICON hIcon = default, ClickTypes showContextMenuClickTypes = ClickTypes.Right)
+    public TrayIcon(string tooltip, HICON hIcon = default, ClickTypes showContextMenuClickTypes = ClickTypes.Right)
     {
         _tooltip = tooltip;
         _hIcon = hIcon == default ? new HICON(SystemIcons.Application.Handle) : hIcon;
@@ -71,42 +71,6 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     public bool RefreshIcon()
     {
         return InternalShellNotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, NOTIFY_ICON_DATA_FLAGS.NIF_ICON);
-    }
-
-    public static ContextMenuItemBase CreateSimpleMenuItem(string itemText, Action<ContextMenuItemBase> action, bool isEnabled = true)
-    {
-        return new SimpleMenuItem(itemText, action, isEnabled);
-    }
-
-    public static ContextMenuItemBase CreateSeparator()
-    {
-        return new SeparatorMenuItem();
-    }
-
-    public static ContextMenuItemBase CreatePopupMenuItem(string itemText, List<ContextMenuItemBase> submenuItems, bool isEnabled = true)
-    {
-        var submenuItem = new PopupMenuItem(itemText, submenuItems, isEnabled);
-        
-        foreach (var item in submenuItems)
-        {
-            item.Parent = submenuItem;
-        }
-        return submenuItem;
-    }
-    
-    public static CheckableMenuItem CreateCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, bool isChecked = false, bool isEnabled = true)
-    {
-        return new CheckableMenuItem(itemText, action, isChecked, isEnabled);
-    }
-    
-    public static CustomCheckableMenuItem CreateCustomCheckableMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON checkedHicon, HICON uncheckedHicon, bool isChecked = false, bool isEnabled = true)
-    {
-        return new CustomCheckableMenuItem(itemText, checkedHicon, uncheckedHicon, action, isChecked, isEnabled);
-    }
-    
-    public static IconMenuItem CreateIconMenuItem(string itemText, Action<ContextMenuItemBase> action, HICON icon, bool isEnabled = true)
-    {
-        return new IconMenuItem(itemText, icon, action, isEnabled);
     }
 
     public void CreateContextMenu(List<ContextMenuItemBase> contextMenuItems)
@@ -163,43 +127,6 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
             TranslateMessage(msg);
             DispatchMessage(msg);
         }
-    }
-
-    /// <summary>
-    /// Use with caution! The returned <see cref="PCWSTR"/> instance will only be valid while the Garbage Collector doesn't move the string in memory.
-    /// </summary>
-    /// <param name="str">String to be converted.</param>
-    /// <returns>A temporarily valid <see cref="PCWSTR"/> instance.</returns>
-    private static unsafe PCWSTR StringToPCWSTR(string str)
-    {
-        fixed (char* strPtr = str)
-        {
-            return new PCWSTR(strPtr);
-        }
-    }
-
-    private unsafe HWND CreateMinimalHiddenWindow()
-    {
-        var classNamePtr = StringToPCWSTR("MinimalHiddenWindowClass");
-        
-        var wc = new WNDCLASSW
-        {
-            lpfnWndProc = ProcessWindowMessages,
-            lpszClassName = classNamePtr
-        };
-        
-        RegisterClass(in wc);
-
-        return CreateWindowEx(
-            WINDOW_EX_STYLE.WS_EX_NOACTIVATE,
-            classNamePtr,
-            classNamePtr,
-            WINDOW_STYLE.WS_OVERLAPPEDWINDOW,
-            0, 0, 0, 0,
-            HWND.Null,
-            HMENU.Null,
-            HINSTANCE.Null,
-            null);
     }
 
     /// <summary>
@@ -290,8 +217,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
             contextMenuItem.AddToMenu(hMenu);
         }
     }
-
-
+    
     private void AddMenuItemRecursive(ContextMenuItemBase menuItem, ContextMenuItemBase? parent)
     {
         menuItem.Id = _nextMenuItemId++;
@@ -342,5 +268,42 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         CloseHandle(threadHandle);
         
         _disposed = true;
+    }
+    
+        /// <summary>
+    /// Use with caution! The returned <see cref="PCWSTR"/> instance will only be valid while the Garbage Collector doesn't move the string in memory.
+    /// </summary>
+    /// <param name="str">String to be converted.</param>
+    /// <returns>A temporarily valid <see cref="PCWSTR"/> instance.</returns>
+    private static unsafe PCWSTR StringToPCWSTR(string str)
+    {
+        fixed (char* strPtr = str)
+        {
+            return new PCWSTR(strPtr);
+        }
+    }
+
+    private unsafe HWND CreateMinimalHiddenWindow()
+    {
+        var classNamePtr = StringToPCWSTR("MinimalHiddenWindowClass");
+        
+        var wc = new WNDCLASSW
+        {
+            lpfnWndProc = ProcessWindowMessages,
+            lpszClassName = classNamePtr
+        };
+        
+        RegisterClass(in wc);
+
+        return CreateWindowEx(
+            WINDOW_EX_STYLE.WS_EX_NOACTIVATE,
+            classNamePtr,
+            classNamePtr,
+            WINDOW_STYLE.WS_OVERLAPPEDWINDOW,
+            0, 0, 0, 0,
+            HWND.Null,
+            HMENU.Null,
+            HINSTANCE.Null,
+            null);
     }
 }
