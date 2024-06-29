@@ -265,7 +265,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         
         if (menuItem is SimpleMenuItem simpleMenuItem)
         {
-            simpleMenuItem.Action.Invoke(menuItem);
+            simpleMenuItem.Action?.Invoke(menuItem);
         }
     }
     

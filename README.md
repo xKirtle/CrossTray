@@ -82,11 +82,21 @@ The library provides several types of menu items that can be added to the contex
 To create a context menu, you just need to call the `CreateContextMenu` method with a list of menu items.
 
 ```csharp
-var contextMenuItems = [
-    new SimpleMenuItem("Simple Item", item => Console.WriteLine("Simple item clicked!")),
+var contextMenuItems = new List<ContextMenuItemBase> {
+    new PopupMenuItem("Submenu", new List<ContextMenuItemBase>
+    {
+        new SimpleMenuItem("Sub item 1", _ => { }),
+        new SimpleMenuItem("Sub item 2", _ => { })
+    }),
     new SeparatorMenuItem(),
-    new SimpleMenuItem("Exit", item => Environment.Exit(0))
-];
+    new IconMenuItem("Item with Icon", redIcon, _ => { }),
+    new SimpleMenuItem("Simple Item", _ => { }),
+    new CheckableMenuItem("Checkable Item", item =>
+    {
+        var checkableItem = item as CheckableMenuItem;
+        Console.WriteLine($"IsChecked: {checkableItem?.IsChecked}");
+    }, isChecked: true)
+};
 
 notifyIcon.CreateContextMenu(contextMenuItems);
 ```

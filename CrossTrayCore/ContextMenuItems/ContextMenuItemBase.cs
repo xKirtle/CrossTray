@@ -15,7 +15,7 @@ public abstract class ContextMenuItemBase(string text, MENU_ITEM_FLAGS flags, bo
     
     public List<ContextMenuItemBase> SubItems { get; } = subItems ?? [];
     public ContextMenuItemBase? Parent { get; set; } = parent;
-    public bool IsEnabled { get; set; } = true;
+    public bool IsEnabled { get; set; } = isEnabled;
 
     public virtual void AddToMenu(HMENU hMenu)
     {
