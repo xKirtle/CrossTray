@@ -19,7 +19,7 @@ public static class Program
         var blueIcon = NotifyIconWrapper.LoadIconFromFile("blue_icon.ico");
       
         // Create an instance of NotifyIconWrapper.
-        using var notifyIcon = new NotifyIconWrapper(tooltip, blueIcon, NotifyIconWrapper.WmLeftButtonDown);
+        using var notifyIcon = new NotifyIconWrapper(tooltip, blueIcon, NotifyIconWrapper.WmRightButtonDown);
 
         // Define actions for clicks
         notifyIcon.OnLeftClickAction = () => Console.WriteLine("Tray icon left-clicked");

@@ -35,7 +35,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     public Action? OnDoubleClickAction { get; set; }
     public Action? OnRightClickAction { get; set; }
 
-    public NotifyIconWrapper(string tooltip, HICON hIcon = default, uint showContextMenuFlags = WmLeftButtonDown)
+    public NotifyIconWrapper(string tooltip, HICON hIcon = default, uint showContextMenuFlags = WmRightButtonDown)
     {
         _tooltip = tooltip;
         _hIcon = hIcon == default ? new HICON(SystemIcons.Application.Handle) : hIcon;
@@ -213,11 +213,21 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     /// <param name="wParam">Often used to pass specific data related to the message. In the case of WM_COMMAND, it holds the identifier of the menu item that was selected.</param>
     /// <param name="lParam">Additional message information, for instance, in the case of mouse messages, holds information about the mouse event (like which button was clicked).</param>
     /// <returns><see cref="LRESULT"/></returns>
-private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARAM lParam)
-{
-    // TODO: Refactor method to reduce complexity
+    private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        if (uMsg == _wmTrayIcon)
+        {
+            HandleTrayIconMessage(hwnd, (uint)lParam.Value);
+        }
+        else if (uMsg == WM_COMMAND)
+        {
+            HandleMenuItemClick((int)wParam.Value);
+        }
+        
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
     
-    if (uMsg == _wmTrayIcon)
+    private void HandleTrayIconMessage(HWND hwnd, uint mouseEventMessage)
     {
         void ShowContextMenuIfFlagSet(uint flag)
         {
@@ -227,7 +237,7 @@ private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARA
             }
         }
         
-        switch ((uint)lParam.Value)
+        switch (mouseEventMessage)
         {
             case WmLeftButtonDown:
                 OnLeftClickAction?.Invoke();
@@ -243,24 +253,24 @@ private LRESULT ProcessWindowMessages(HWND hwnd, uint uMsg, WPARAM wParam, LPARA
                 break;
         }
     }
-    else if (uMsg == WM_COMMAND)
+    
+    private void HandleMenuItemClick(int menuItemId)
     {
-        var commandId = (int)wParam.Value;
-        if (_contextMenuItems.TryGetValue(commandId, out var menuItem))
+        if (!_contextMenuItems.TryGetValue(menuItemId, out var menuItem))
         {
-            if (menuItem is CheckableMenuItem checkableMenuItem)
-            {
-                checkableMenuItem.Toggle();
-            }
-            
-            if (menuItem is SimpleMenuItem simpleMenuItem)
-            {
-                simpleMenuItem.Action.Invoke(menuItem);
-            }
+            return;
+        }
+        
+        if (menuItem is CheckableMenuItem checkableMenuItem)
+        {
+            checkableMenuItem.Toggle();
+        }
+        
+        if (menuItem is SimpleMenuItem simpleMenuItem)
+        {
+            simpleMenuItem.Action.Invoke(menuItem);
         }
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
     
     private unsafe void ShowContextMenu(HWND hwnd)
     {
