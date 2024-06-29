@@ -10,27 +10,12 @@
 
 <h4 align="center">A cross-platform .NET library for creating tray icons with customizable context menus.</h4>
 
-<p align="center">
-  <a href="#key-features">Key Features</a> •
-  <a href="#how-to-use">How To Use</a> •
-  <a href="#download">Download</a> •
-  <a href="#credits">Credits</a> •
-  <a href="#related">Related</a> •
-  <a href="#license">License</a>
-</p>
-
 ## Key Features
 
-* Cross-platform tray icon support
-  - Seamless integration with Windows, macOS, and Linux.
-* Customizable context menus
-  - Support for text, icons, checkable items, separators, and nested submenus.
-* Event handling
-  - Define actions for left-click, right-click, and double-click events on the tray icon.
-* Easy integration
-  - Simple API for adding and managing tray icons and context menus.
-* Lightweight and efficient
-  - Minimal footprint and optimized for performance.
+- **Cross-Platform**: CrossTray is a .NET library that allows you to create tray icons with customizable context menus on Windows, Linux, and macOS.
+- **Simple API**: CrossTray provides a simple API for creating tray icons and context menus with various types of menu items.
+- **Lightweight**: CrossTray is a lightweight library with minimal dependencies that can be easily integrated into your .NET projects.
+- **Open Source**: CrossTray is an open-source project released under the MIT License, so you can use it for free in your applications.
 
 ## How To Use
 
