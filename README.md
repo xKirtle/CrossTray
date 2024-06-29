@@ -99,9 +99,9 @@ var contextMenuItems = [
 notifyIcon.CreateContextMenu(contextMenuItems);
 ```
 
-If you decide to add a context menu to the tray icon, you might want to decide what happens when the user clicks on the icon.
-In the section <a href="#defining-actions">Defining Actions</a>, we showed how to define actions for left-click, right-click, and double-click events on the tray icon.
+If you decide to add a context menu to the tray icon, you might want to decide how the context menu is shown.
 
+In the section <a href="#defining-actions">Defining Actions</a>, we showed how to define actions for left-click, right-click, and double-click events on the tray icon.
 However, to modify how the context menu is shown, you can only change this behaviour by providing a custom flag to the constructor. By default, the context menu is shown on right-click.
 
 ```csharp
