@@ -67,12 +67,12 @@ notifyIcon.MountIcon();
 
 ### Defining Actions 
 
-You can also define actions for left-click, right-click, and double-click events on the tray icon.
+You can also define actions for left-click, right-click, and double left-click events on the tray icon.
 
 ```csharp
-notifyIcon.LeftClick += (sender, args) => Console.WriteLine("Left-clicked!");
-notifyIcon.RightClick += (sender, args) => Console.WriteLine("Right-clicked!");
-notifyIcon.DoubleClick += (sender, args) => Console.WriteLine("Double-clicked!");
+notifyIcon.OnLeftClick += (sender, args) => { ... };
+notifyIcon.OnRightClick += (sender, args) => { ... };
+notifyIcon.OnDoubleLeftClick += (sender, args) => { ... };
 ```
 
 ### Creating a Context Menu
@@ -105,8 +105,8 @@ In the section <a href="#defining-actions">Defining Actions</a>, we showed how t
 However, to modify how the context menu is shown, you can only change this behaviour by providing a custom flag to the constructor. By default, the context menu is shown on right-click.
 
 ```csharp
-// Show the context menu on left-click, right-click, and double-click.
-var showContextMenuFlag = NotifyIconWrapper.WmLeftButtonDown | NotifyIconWrapper.WmRightButtonDown | NotifyIconWrapper.WmDoubleClick;
+// Show the context menu on left-click, right-click, and double left-click.
+var showContextMenuFlag = ClickTypes.Left | ClickTypes.Right | ClickTypes.DoubleLeft;
 using var notifyIcon = new NotifyIconWrapper("Tooltip Text", icon, showContextMenuFlag);
 ```
 

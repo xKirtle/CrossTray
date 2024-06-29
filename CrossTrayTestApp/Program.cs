@@ -19,12 +19,17 @@ public static class Program
         var blueIcon = NotifyIconWrapper.LoadIconFromFile("blue_icon.ico");
       
         // Create an instance of NotifyIconWrapper.
-        using var notifyIcon = new NotifyIconWrapper(tooltip, blueIcon, NotifyIconWrapper.WmRightButtonDown);
+        using var notifyIcon = new NotifyIconWrapper(tooltip, blueIcon, ClickTypes.Right | ClickTypes.DoubleLeft);
 
         // Define actions for clicks
-        notifyIcon.OnLeftClickAction = () => Console.WriteLine("Tray icon left-clicked");
-        notifyIcon.OnDoubleClickAction = () => Console.WriteLine("Tray icon double-clicked");
-        notifyIcon.OnRightClickAction = () => Console.WriteLine("Tray icon right-clicked");
+        void HandleTrayIconClick(object? sender, NotifyIconEventArgs e)
+        {
+            Console.WriteLine($"Tray icon clicked with button: {e.ClickTypes.ToString()}");
+        }
+                
+        notifyIcon.OnLeftClick += HandleTrayIconClick;
+        notifyIcon.OnRightClick += HandleTrayIconClick;
+        notifyIcon.OnDoubleLeftClick += HandleTrayIconClick;
 
         // Define actions for context menu items
         notifyIcon.CreateContextMenu(

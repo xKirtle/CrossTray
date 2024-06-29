@@ -19,7 +19,7 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     private string _tooltip;
     private const uint UId = 1;
     private readonly uint _wmTrayIcon = RegisterWindowMessage("WM_TRAYICON");
-    private readonly uint _showContextMenuFlags;
+    private readonly ClickTypes _showContextMenuClickType;
 
     private readonly Thread _thread;
     private readonly ManualResetEvent _windowCreatedEvent;
@@ -28,18 +28,15 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     private readonly Dictionary<int, ContextMenuItemBase> _contextMenuItems = new();
     private int _nextMenuItemId = 1;
     
-    public const uint WmLeftButtonDown = 513U;
-    public const uint WmRightButtonDown = 516U;
-    public const uint WmLeftButtonDoubleClick = 515U;
-    public Action? OnLeftClickAction { get; set; }
-    public Action? OnDoubleClickAction { get; set; }
-    public Action? OnRightClickAction { get; set; }
+    public event EventHandler<NotifyIconEventArgs>? OnLeftClick;
+    public event EventHandler<NotifyIconEventArgs>? OnRightClick;
+    public event EventHandler<NotifyIconEventArgs>? OnDoubleLeftClick;
 
-    public NotifyIconWrapper(string tooltip, HICON hIcon = default, uint showContextMenuFlags = WmRightButtonDown)
+    public NotifyIconWrapper(string tooltip, HICON hIcon = default, ClickTypes showContextMenuClickTypes = ClickTypes.Right)
     {
         _tooltip = tooltip;
         _hIcon = hIcon == default ? new HICON(SystemIcons.Application.Handle) : hIcon;
-        _showContextMenuFlags = showContextMenuFlags;
+        _showContextMenuClickType = showContextMenuClickTypes;
         _windowCreatedEvent = new ManualResetEvent(initialState: false);
         
         // Start the thread that will handle the NotifyIcon message loop
@@ -229,9 +226,9 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
     
     private void HandleTrayIconMessage(HWND hwnd, uint mouseEventMessage)
     {
-        void ShowContextMenuIfFlagSet(uint flag)
+        void ShowContextMenuIfFlagSet(ClickTypes flag)
         {
-            if ((_showContextMenuFlags & flag) == flag)
+            if (((uint)_showContextMenuClickType & (uint)flag) == (uint)flag)
             {
                 ShowContextMenu(hwnd);
             }
@@ -239,17 +236,17 @@ public class NotifyIconWrapper : INotifyIconWrapper, IDisposable
         
         switch (mouseEventMessage)
         {
-            case WmLeftButtonDown:
-                OnLeftClickAction?.Invoke();
-                ShowContextMenuIfFlagSet(WmLeftButtonDown);
+            case WM_LBUTTONDOWN:
+                OnLeftClick?.Invoke(this, new NotifyIconEventArgs(ClickTypes.Left));
+                ShowContextMenuIfFlagSet(ClickTypes.Left);
                 break;
-            case WmRightButtonDown:
-                OnRightClickAction?.Invoke();
-                ShowContextMenuIfFlagSet(WmRightButtonDown);
+            case WM_RBUTTONDOWN:
+                OnRightClick?.Invoke(this, new NotifyIconEventArgs(ClickTypes.Right));
+                ShowContextMenuIfFlagSet(ClickTypes.Right);
                 break;
-            case WmLeftButtonDoubleClick:
-                OnDoubleClickAction?.Invoke();
-                ShowContextMenuIfFlagSet(WmLeftButtonDoubleClick);
+            case WM_LBUTTONDBLCLK:
+                OnDoubleLeftClick?.Invoke(this, new NotifyIconEventArgs(ClickTypes.DoubleLeft));
+                ShowContextMenuIfFlagSet(ClickTypes.DoubleLeft);
                 break;
         }
     }
