@@ -30,13 +30,7 @@ public static class Program
         notifyIcon.OnLeftClick += HandleTrayIconClick;
         notifyIcon.OnRightClick += HandleTrayIconClick;
         notifyIcon.OnDoubleLeftClick += HandleTrayIconClick;
-        
-        // Define actions for context menu items
-        void HandleMenuItemAction(ContextMenuItemBase item)
-        {
-            Console.WriteLine($"Menu item clicked: {item.Text}");
-        }
-        
+
         var contextMenuItems = new List<ContextMenuItemBase> 
         {
             new PopupMenuItem("Submenu", new List<ContextMenuItemBase>
@@ -72,5 +66,11 @@ public static class Program
 
         Console.WriteLine("Press Enter to exit...");
         Console.ReadLine();
+
+        // Define actions for context menu items
+        void HandleMenuItemAction(ContextMenuItemBase item)
+        {
+            Console.WriteLine($"Menu item clicked: {item.Text}");
+        }
     }
 }

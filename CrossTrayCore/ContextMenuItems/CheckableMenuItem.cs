@@ -2,10 +2,16 @@
 
 namespace CrossTrayCore.ContextMenuItems;
 
-public class CheckableMenuItem(string text, Action<ContextMenuItemBase>? action = default, bool isChecked = false, bool isEnabled = true, ContextMenuItemBase? parent = null) 
-    : SimpleMenuItem(text, action, isEnabled, parent)
+public class CheckableMenuItem : SimpleMenuItem
 {
-    public bool IsChecked { get; private set; } = isChecked;
+    public CheckableMenuItem(string text, Action<ContextMenuItemBase>? action = default, bool isChecked = false, bool isEnabled = true, ContextMenuItemBase? parent = null) : base(
+        text, action, isEnabled, parent)
+    {
+        IsChecked = isChecked;
+        UpdateFlags();
+    }
+    
+    public bool IsChecked { get; private set; }
     
     public void Toggle()
     {
